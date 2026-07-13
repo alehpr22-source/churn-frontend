@@ -54,9 +54,15 @@ export default function RootLayout({
         </header>
         {children}
         <footer className="text-center text-text-muted text-xs px-6 py-4 mt-auto">
-          Proyecto académico — Predicción de Abandono de Clientes mediante
-          Machine Learning y un Agente de Utilidad para la Retención de
-          Clientes.
+          <p>
+            Proyecto académico — Predicción de Abandono de Clientes mediante
+            Machine Learning y un Agente de Utilidad para la Retención de
+            Clientes.
+          </p>
+          <p className="mt-1 text-[10px] text-text-muted/60 font-mono">
+            Modelo XGBoost optimizado por F2-score · Recall: 81.6% · ROC-AUC:
+            0.846
+          </p>
         </footer>
       </body>
     </html>

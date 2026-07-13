@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { ClienteInput, RecomendarResponse } from "@/lib/types"
+import type { ClienteInput, RecomendarResponse, HistorialEntry } from "@/lib/types"
 import { recomendar } from "@/lib/api"
 import SelectField from "./SelectField"
 import FormField from "./FormField"
@@ -93,15 +93,29 @@ export default function ChurnForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [coldStart, setColdStart] = useState(true)
+  const [historial, setHistorial] = useState<HistorialEntry[]>([])
+  const [historialOpen, setHistorialOpen] = useState(false)
+  const [perfilActual, setPerfilActual] = useState<string | null>(null)
 
-  const cargarCliente = (cliente: ClienteInput) => {
+  const cargarCliente = (cliente: ClienteInput, perfil: string) => {
     setForm(cliente)
     setResultado(null)
+    setError(null)
+    setPerfilActual(perfil)
+  }
+
+  const cargarResultadoDelHistorial = (entry: HistorialEntry) => {
+    setResultado({
+      probabilidad_abandono: entry.probabilidad,
+      accion_recomendada: entry.accion,
+      utilidad_por_accion: entry.utilidad_por_accion,
+    })
     setError(null)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    setPerfilActual(null)
     setForm((prev) => ({
       ...prev,
       [name]:
@@ -122,6 +136,18 @@ export default function ChurnForm() {
       const data = await recomendar(form)
       setResultado(data)
       setColdStart(false)
+      setHistorial((prev) => {
+        const entry: HistorialEntry = {
+          id: Date.now(),
+          perfil: perfilActual ?? "Personalizado",
+          probabilidad: data.probabilidad_abandono,
+          accion: data.accion_recomendada,
+          utilidad_por_accion: data.utilidad_por_accion,
+          cargoMensual: form.MonthlyCharges,
+        }
+        return [entry, ...prev].slice(0, 4)
+      })
+      setHistorialOpen(true)
     } catch (err) {
       if (err instanceof TypeError) {
         setError(
@@ -147,21 +173,21 @@ export default function ChurnForm() {
         <div className="flex flex-wrap gap-2 mb-6 pb-5 border-b border-border">
           <button
             type="button"
-            onClick={() => cargarCliente(CLIENTE_ALTO_RIESGO)}
+            onClick={() => cargarCliente(CLIENTE_ALTO_RIESGO, "Alto riesgo")}
             className="px-3 py-1.5 text-xs font-medium rounded-lg bg-risk-alto/10 text-risk-alto hover:bg-risk-alto/20 transition-colors"
           >
             Cargar alto riesgo
           </button>
           <button
             type="button"
-            onClick={() => cargarCliente(CLIENTE_BAJO_RIESGO)}
+            onClick={() => cargarCliente(CLIENTE_BAJO_RIESGO, "Bajo riesgo")}
             className="px-3 py-1.5 text-xs font-medium rounded-lg bg-risk-bajo/10 text-risk-bajo hover:bg-risk-bajo/20 transition-colors"
           >
             Cargar bajo riesgo
           </button>
           <button
             type="button"
-            onClick={() => cargarCliente(initialForm)}
+            onClick={() => cargarCliente(initialForm, "Promedio")}
             className="px-3 py-1.5 text-xs font-medium rounded-lg bg-text-muted/10 text-text-muted hover:bg-text-muted/20 transition-colors"
           >
             Cargar promedio
@@ -411,6 +437,50 @@ export default function ChurnForm() {
               utilidad_por_accion={resultado.utilidad_por_accion}
               accion_recomendada={resultado.accion_recomendada}
             />
+
+            {historial.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setHistorialOpen(!historialOpen)}
+                  className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors"
+                >
+                  <span className="font-mono text-xs">{historialOpen ? "▼" : "▶"}</span>
+                  Historial ({historial.length})
+                </button>
+                {historialOpen && (
+                  <div className="mt-2 space-y-1">
+                    {historial.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => cargarResultadoDelHistorial(entry)}
+                        className="w-full text-left text-xs flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            entry.probabilidad < 0.33
+                              ? "bg-risk-bajo"
+                              : entry.probabilidad < 0.66
+                                ? "bg-risk-medio"
+                                : "bg-risk-alto"
+                          }`}
+                        />
+                        <span className="font-mono text-text-muted w-20 truncate">
+                          {entry.perfil}
+                        </span>
+                        <span className="font-mono text-text">
+                          {(entry.probabilidad * 100).toFixed(0)}%
+                        </span>
+                        <span className="text-text-muted truncate">
+                          {entry.accion}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </section>

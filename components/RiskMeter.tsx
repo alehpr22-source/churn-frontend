@@ -34,11 +34,23 @@ export default function RiskMeter({ probabilidad }: RiskMeterProps) {
           {etiquetaRiesgo(probabilidad)}
         </span>
       </div>
-      <div className="h-2.5 rounded-full bg-border overflow-hidden mt-2">
+      <div className="relative mt-2">
+        <div className="h-2.5 rounded-full bg-border overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${pct}%`, backgroundColor: color }}
+          />
+        </div>
         <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          className="absolute top-0 w-0.5 h-4 bg-text-muted/50 rounded-full"
+          style={{ left: "26.5%" }}
         />
+        <span
+          className="absolute text-[10px] text-text-muted/70 font-mono leading-none"
+          style={{ left: "26.5%", top: "18px" }}
+        >
+          Promedio 26.5%
+        </span>
       </div>
     </div>
   )

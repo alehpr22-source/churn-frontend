@@ -25,3 +25,12 @@ export interface RecomendarResponse {
   accion_recomendada: string
   utilidad_por_accion: Record<string, number>
 }
+
+export interface HistorialEntry {
+  id: number
+  perfil: string
+  probabilidad: number
+  accion: string
+  utilidad_por_accion: Record<string, number>
+  cargoMensual: number
+}
