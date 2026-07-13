@@ -9,6 +9,7 @@ import RiskMeter from "./RiskMeter"
 import ActionCard from "./ActionCard"
 import UtilityTable from "./UtilityTable"
 import ExplanationCard from "./ExplanationCard"
+import HowItWorks from "./HowItWorks"
 
 const initialForm: ClienteInput = {
   gender: "Female",
@@ -437,52 +438,55 @@ export default function ChurnForm() {
               utilidad_por_accion={resultado.utilidad_por_accion}
               accion_recomendada={resultado.accion_recomendada}
             />
-
-            {historial.length > 0 && (
-              <div className="mt-5 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setHistorialOpen(!historialOpen)}
-                  className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors"
-                >
-                  <span className="font-mono text-xs">{historialOpen ? "▼" : "▶"}</span>
-                  Historial ({historial.length})
-                </button>
-                {historialOpen && (
-                  <div className="mt-2 space-y-1">
-                    {historial.map((entry) => (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        onClick={() => cargarResultadoDelHistorial(entry)}
-                        className="w-full text-left text-xs flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            entry.probabilidad < 0.33
-                              ? "bg-risk-bajo"
-                              : entry.probabilidad < 0.66
-                                ? "bg-risk-medio"
-                                : "bg-risk-alto"
-                          }`}
-                        />
-                        <span className="font-mono text-text-muted w-20 truncate">
-                          {entry.perfil}
-                        </span>
-                        <span className="font-mono text-text">
-                          {(entry.probabilidad * 100).toFixed(0)}%
-                        </span>
-                        <span className="text-text-muted truncate">
-                          {entry.accion}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
+
+        <div className="mt-5 pt-4 border-t border-border">
+          <button
+            type="button"
+            onClick={() => setHistorialOpen(!historialOpen)}
+            className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors"
+            disabled={historial.length === 0}
+          >
+            <span className="font-mono text-xs">
+              {historialOpen ? "▼" : "▶"}
+            </span>
+            Historial ({historial.length})
+          </button>
+          {historialOpen && historial.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {historial.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => cargarResultadoDelHistorial(entry)}
+                  className="w-full text-left text-xs flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      entry.probabilidad < 0.33
+                        ? "bg-risk-bajo"
+                        : entry.probabilidad < 0.66
+                          ? "bg-risk-medio"
+                          : "bg-risk-alto"
+                    }`}
+                  />
+                  <span className="font-mono text-text-muted w-20 truncate">
+                    {entry.perfil}
+                  </span>
+                  <span className="font-mono text-text">
+                    {(entry.probabilidad * 100).toFixed(0)}%
+                  </span>
+                  <span className="text-text-muted truncate">
+                    {entry.accion}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <HowItWorks />
       </section>
     </div>
   )

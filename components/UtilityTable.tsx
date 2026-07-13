@@ -37,6 +37,10 @@ export default function UtilityTable({
           ))}
         </tbody>
       </table>
+      <p className="mt-3 text-[10px] text-text-muted italic leading-tight">
+        * Costos y efectividades de las acciones son valores supuestos con fines
+        ilustrativos. Ver Sección 4.1.2 del informe del proyecto.
+      </p>
     </div>
   )
 }
