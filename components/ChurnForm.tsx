@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { ClienteInput, RecomendarResponse, HistorialEntry } from "@/lib/types"
 import { recomendar } from "@/lib/api"
 import SelectField from "./SelectField"
@@ -98,6 +98,27 @@ export default function ChurnForm() {
   const [historialOpen, setHistorialOpen] = useState(false)
   const [perfilActual, setPerfilActual] = useState<string | null>(null)
 
+  const phoneServiceOff = form.PhoneService === "No"
+  const internetServiceOff = form.InternetService === "No"
+
+  useEffect(() => {
+    setForm((prev) => {
+      const next = { ...prev }
+      if (prev.PhoneService === "No") {
+        next.MultipleLines = "No phone service"
+      }
+      if (prev.InternetService === "No") {
+        next.OnlineSecurity = "No internet service"
+        next.OnlineBackup = "No internet service"
+        next.DeviceProtection = "No internet service"
+        next.TechSupport = "No internet service"
+        next.StreamingTV = "No internet service"
+        next.StreamingMovies = "No internet service"
+      }
+      return next
+    })
+  }, [form.PhoneService, form.InternetService])
+
   const cargarCliente = (cliente: ClienteInput, perfil: string) => {
     setForm(cliente)
     setResultado(null)
@@ -112,6 +133,13 @@ export default function ChurnForm() {
       utilidad_por_accion: entry.utilidad_por_accion,
     })
     setError(null)
+  }
+
+  const reiniciar = () => {
+    setForm(initialForm)
+    setResultado(null)
+    setError(null)
+    setPerfilActual(null)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -199,7 +227,7 @@ export default function ChurnForm() {
           <h3 className="font-heading text-xs uppercase tracking-wider text-text-muted mb-3">
             Perfil del cliente
           </h3>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
             <SelectField
               label="Género"
               name="gender"
@@ -241,13 +269,14 @@ export default function ChurnForm() {
           <h3 className="font-heading text-xs uppercase tracking-wider text-text-muted mb-3">
             Contrato y facturación
           </h3>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
             <FormField
               label="Antigüedad (meses)"
               name="tenure"
               value={form.tenure}
               onChange={handleChange}
               min="0"
+              tooltip="Rango del dataset: 1–72 meses"
             />
             <SelectField
               label="Tipo de contrato"
@@ -295,7 +324,7 @@ export default function ChurnForm() {
           <h3 className="font-heading text-xs uppercase tracking-wider text-text-muted mb-3">
             Servicios contratados
           </h3>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
             <SelectField
               label="Servicio telefónico"
               name="PhoneService"
@@ -308,6 +337,7 @@ export default function ChurnForm() {
               name="MultipleLines"
               value={form.MultipleLines}
               onChange={handleChange}
+              disabled={phoneServiceOff}
               options={[
                 { value: "No", label: "No" },
                 { value: "Yes", label: "Sí" },
@@ -330,6 +360,7 @@ export default function ChurnForm() {
               name="OnlineSecurity"
               value={form.OnlineSecurity}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
             <SelectField
@@ -337,6 +368,7 @@ export default function ChurnForm() {
               name="OnlineBackup"
               value={form.OnlineBackup}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
             <SelectField
@@ -344,6 +376,7 @@ export default function ChurnForm() {
               name="DeviceProtection"
               value={form.DeviceProtection}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
             <SelectField
@@ -351,6 +384,7 @@ export default function ChurnForm() {
               name="TechSupport"
               value={form.TechSupport}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
             <SelectField
@@ -358,6 +392,7 @@ export default function ChurnForm() {
               name="StreamingTV"
               value={form.StreamingTV}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
             <SelectField
@@ -365,6 +400,7 @@ export default function ChurnForm() {
               name="StreamingMovies"
               value={form.StreamingMovies}
               onChange={handleChange}
+              disabled={internetServiceOff}
               options={SI_NO_INTERNET}
             />
           </div>
@@ -374,7 +410,7 @@ export default function ChurnForm() {
           <h3 className="font-heading text-xs uppercase tracking-wider text-text-muted mb-3">
             Cargos
           </h3>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
             <FormField
               label="Cargo mensual (USD)"
               name="MonthlyCharges"
@@ -382,6 +418,7 @@ export default function ChurnForm() {
               onChange={handleChange}
               min="0"
               step="0.01"
+              tooltip="Rango del dataset: 18.8–118.75 USD"
             />
             <FormField
               label="Cargo total acumulado (USD)"
@@ -390,8 +427,19 @@ export default function ChurnForm() {
               onChange={handleChange}
               min="0"
               step="0.01"
+              tooltip="Rango del dataset: 18.8–8684.8 USD"
             />
           </div>
+
+          {form.tenure === 0 && form.TotalCharges > 0 && (
+            <div className="mt-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+              <span>⚠️</span>
+              <span>
+                El cliente tiene antigüedad 0 pero cargos totales mayores a 0.
+                Revisa los valores ingresados.
+              </span>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -438,6 +486,13 @@ export default function ChurnForm() {
               utilidad_por_accion={resultado.utilidad_por_accion}
               accion_recomendada={resultado.accion_recomendada}
             />
+            <button
+              type="button"
+              onClick={reiniciar}
+              className="mt-4 w-full py-2 px-3 text-xs font-medium rounded-lg border border-border text-text-muted hover:bg-surface hover:text-text transition-colors cursor-pointer"
+            >
+              Nueva consulta
+            </button>
           </div>
         )}
 
